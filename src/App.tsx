@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Toaster } from 'sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { AccountLayout } from '@/components/account/AccountLayout';
 import { Overview } from '@/pages/Overview';
 import { Profile } from '@/pages/Profile';
@@ -28,7 +27,7 @@ export default function App() {
   }, [user, setTheme]);
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <>
       {!ready ? (
         <div className="grid h-full place-items-center text-muted-foreground">
           <Loader2 className="h-6 w-6 animate-spin" />
@@ -46,6 +45,6 @@ export default function App() {
         </BrowserRouter>
       )}
       <Toaster theme={isDark ? 'dark' : 'light'} position="bottom-right" richColors />
-    </TooltipProvider>
+    </>
   );
 }
