@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, LogOut, Settings, User } from 'lucide-react';
+import { Boxes, LayoutGrid, LogOut, Settings, User } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuth, type AuthUser } from '@/stores/useAuthStore';
 import { Avatar } from './Avatar';
@@ -16,6 +16,7 @@ interface Tab {
 // Settings is intentionally listed apart so it can be pinned to the bottom (GitHub-style).
 const MAIN_TABS: Tab[] = [
   { to: '/account', label: 'Overview', icon: LayoutGrid, end: true },
+  { to: '/account/modules', label: 'Modules', icon: Boxes },
   { to: '/account/profile', label: 'Profile', icon: User },
 ];
 const SETTINGS_TAB: Tab = { to: '/account/settings', label: 'Settings', icon: Settings };

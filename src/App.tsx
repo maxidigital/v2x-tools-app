@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { AccountLayout } from '@/components/account/AccountLayout';
 import { Overview } from '@/pages/Overview';
+import { Modules } from '@/pages/Modules';
 import { Profile } from '@/pages/Profile';
 import { Settings } from '@/pages/Settings';
 import { useTheme } from '@/hooks/useTheme';
@@ -37,6 +38,7 @@ export default function App() {
           <Routes>
             <Route path="/account" element={<AccountLayout />}>
               <Route index element={<Overview />} />
+              <Route path="modules" element={<Modules />} />
               <Route path="profile" element={<Profile />} />
               <Route path="settings" element={<Settings />} />
             </Route>

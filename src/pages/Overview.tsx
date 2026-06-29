@@ -1,21 +1,38 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Boxes, FileCode2, Tags } from 'lucide-react';
 import * as hub from '@/services/hubClient';
 import { useAsync } from '@/hooks/useAsync';
 import { useAuth } from '@/stores/useAuthStore';
 import { Page, PageHeader, Section } from '@/components/account/Page';
 import { PlanBadge } from '@/components/account/PlanBadge';
+import { cn } from '@/lib/cn';
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Tags; label: string; value: number | string }) {
-  return (
-    <div className="rounded-lg border border-border bg-card p-4">
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  to,
+}: {
+  icon: typeof Tags;
+  label: string;
+  value: number | string;
+  to?: string;
+}) {
+  const inner = (
+    <>
       <div className="flex items-center gap-2 text-muted-foreground">
         <Icon className="h-4 w-4" />
         <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
       </div>
       <p className="mt-2 text-2xl font-semibold tabular-nums">{value}</p>
-    </div>
+    </>
   );
+  const className = cn(
+    'block rounded-lg border border-border bg-card p-4',
+    to && 'transition-colors hover:border-primary/40 hover:bg-accent/40'
+  );
+  return to ? <Link to={to} className={className}>{inner}</Link> : <div className={className}>{inner}</div>;
 }
 
 /**
@@ -50,7 +67,12 @@ export function Overview() {
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Stat icon={Tags} label="Personal aliases" value={loading ? '…' : personalAliases.length} />
         <Stat icon={FileCode2} label="Saved messages" value={loading ? '…' : messages.data?.length ?? 0} />
-        <Stat icon={Boxes} label="Modules visible" value={loading ? '…' : modules.data?.length ?? 0} />
+        <Stat
+          icon={Boxes}
+          label="Modules visible"
+          value={loading ? '…' : modules.data?.length ?? 0}
+          to="/account/modules"
+        />
       </div>
 
       <Section title="Plan">

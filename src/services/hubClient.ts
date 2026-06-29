@@ -37,8 +37,12 @@ async function readError(res: Response, fallback: string): Promise<string> {
   return text || fallback;
 }
 
-async function getJson<T>(path: string, fallback: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { headers: authHeaders() });
+async function getJson<T>(
+  path: string,
+  fallback: string,
+  extraHeaders: Record<string, string> = {}
+): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { headers: { ...authHeaders(), ...extraHeaders } });
   if (!res.ok) throw new HubError(await readError(res, fallback), res.status);
   return (await res.json()) as T;
 }
@@ -59,10 +63,35 @@ export interface SavedMessage {
   fixups: unknown[];
 }
 
-/** An ASN.1 module visible to the user (their own + public). */
+/** An ASN.1 module visible to the user. `scope` is `public` (user 0) or `private` (the user's own). */
 export interface Module {
   moduleId: string;
   oid: string;
+  uploadedAt?: string;
+  scope?: 'public' | 'private';
+}
+
+/** A field of a type: its name and the type it references. */
+export interface ModuleField {
+  name: string;
+  type: string;
+  optional?: boolean;
+  default?: string;
+}
+
+/** A type the module defines (SEQUENCE/CHOICE/ENUMERATED/…), with its members. */
+export interface ModuleElement {
+  name: string;
+  kind: string;
+  fields?: ModuleField[];
+  options?: ModuleField[];
+  values?: string[];
+}
+
+/** Digested structure of a module (NO raw ASN.1 source): the types it defines + their members. */
+export interface ModuleStructure {
+  errors?: { line?: number; message?: string }[];
+  modules?: { name: string; elements: ModuleElement[] }[];
 }
 
 /** GET /api/aliases — the user's aliases plus the public defaults. */
@@ -78,4 +107,11 @@ export function listMessages(): Promise<SavedMessage[]> {
 /** GET /api/modules — modules visible to the user (their own + public), sorted by name. */
 export function listModules(): Promise<Module[]> {
   return getJson<Module[]>('/api/modules', 'Could not load modules');
+}
+
+/** GET /api/modules/structure — the module's digested structure (types + members). No raw source. */
+export function getModuleStructure(oid: string): Promise<ModuleStructure> {
+  return getJson<ModuleStructure>('/api/modules/structure', 'Could not load module structure', {
+    'X-Module-Oid': oid,
+  });
 }
