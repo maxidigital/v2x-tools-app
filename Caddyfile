@@ -1,0 +1,32 @@
+{
+	admin off
+	auto_https off
+}
+
+:{$PORT:8080} {
+	root * /usr/share/caddy
+	encode gzip
+
+	# Same-origin API surface for the account app (→ no CORS). Upstreams use Railway PRIVATE
+	# networking (<service>.railway.internal:<port>). The app only needs identity + the hub:
+	#   - /api/auth/* → v2x-tools-users (me / redeem / JWKS). The OAuth/SSO dance itself is a
+	#     top-level redirect to the IdP host (v2x.tools), NOT proxied here — see usersClient.ts.
+	#   - everything else under /api/* → v2x-tools-hub (aliases / messages / modules, by Bearer).
+	# Legacy non-V2X cruft (contact/stats/monitoring) is NOT reachable here — the account app
+	# doesn't use it.
+	@auth path /api/auth/*
+	handle @auth {
+		reverse_proxy http://users.railway.internal:8095
+	}
+
+	handle /api/* {
+		reverse_proxy http://v2x-tools-hub.railway.internal:8080
+	}
+
+	# Everything else is the static SPA. Real files win first, then SPA fallback to index.html
+	# (so deep links like /account/profile load the app).
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}
