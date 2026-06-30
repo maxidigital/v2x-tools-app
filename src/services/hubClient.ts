@@ -67,6 +67,7 @@ export interface SavedMessage {
 export interface Module {
   moduleId: string;
   oid: string;
+  note?: string;
   uploadedAt?: string;
   scope?: 'public' | 'private';
 }
