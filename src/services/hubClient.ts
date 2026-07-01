@@ -68,6 +68,7 @@ export interface Module {
   moduleId: string;
   oid: string;
   note?: string;
+  elementCount?: number;
   uploadedAt?: string;
   scope?: 'public' | 'private';
 }

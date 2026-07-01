@@ -67,16 +67,13 @@ function ModuleBody({ module }: { module: Module }) {
   );
 }
 
-/** One element: name + asn1Type, expandable to its description, metadata, named values and fields. */
+/** One element: name + asn1Type, expandable to its ASN.1 structure — named values, range and fields.
+ *  No comments/descriptions here (those live in the index for the MCP; the tab shows structure only). */
 function ElementRow({ el }: { el: IndexElement }) {
-  const asn1 = el.annotation?.asn1;
   const fields = el.fields ?? [];
-  const count = fields.length || el.values?.length || 0;
-  const chips = [
-    asn1?.category,
-    asn1?.unit && `unit: ${asn1.unit}`,
-    el.constraint && `${el.constraint.min ?? '?'} … ${el.constraint.max ?? '?'}`,
-  ].filter(Boolean) as string[];
+  const values = el.values ?? [];
+  const range = el.constraint && `${el.constraint.min ?? '?'} … ${el.constraint.max ?? '?'}`;
+  const hasBody = fields.length > 0 || values.length > 0 || Boolean(range);
 
   return (
     <details className="rounded-md border border-border/60 open:bg-accent/20">
@@ -85,62 +82,45 @@ function ElementRow({ el }: { el: IndexElement }) {
         <Badge variant="outline" className="font-mono text-[10px]">
           {el.asn1Type}
         </Badge>
-        {count > 0 && <span className="ml-auto text-xs text-muted-foreground">{count}</span>}
+        {/* count only for containers (SEQUENCE/CHOICE members) */}
+        {fields.length > 0 && <span className="ml-auto text-xs text-muted-foreground">{fields.length}</span>}
       </summary>
 
       <div className="flex flex-col gap-3 border-t border-border/60 px-3 py-2.5">
-        {asn1?.description && (
-          <p className="whitespace-pre-line border-l-2 border-border pl-3 text-xs leading-relaxed text-muted-foreground">
-            {asn1.description}
-          </p>
-        )}
-
-        {chips.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {chips.map((c) => (
-              <span key={c} className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-secondary-foreground">
-                {c}
-              </span>
-            ))}
+        {range && (
+          <div>
+            <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[11px] text-secondary-foreground">
+              {range}
+            </span>
           </div>
         )}
 
-        {el.values && el.values.length > 0 && (
+        {values.length > 0 && (
           <ul className="flex flex-wrap gap-1.5 text-xs">
-            {el.values.map((v) => (
+            {values.map((v) => (
               <li key={v.name} className="rounded bg-secondary px-1.5 py-0.5 font-mono text-secondary-foreground">
-                {v.name} <span className="text-muted-foreground">({v.value})</span>
+                {v.name}
+                {v.value !== '' && <span className="text-muted-foreground"> ({v.value})</span>}
               </li>
             ))}
           </ul>
         )}
 
         {fields.length > 0 && (
-          <ul className="flex flex-col gap-1.5 text-sm">
+          <ul className="flex flex-col gap-1 text-sm">
             {fields.map((f) => (
-              <li key={f.name} className="flex flex-col gap-0.5">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="truncate">
-                    {f.name}
-                    {f.optional && <span className="ml-1 text-xs text-muted-foreground">optional</span>}
-                  </span>
-                  <span className="truncate font-mono text-xs text-muted-foreground">{f.type}</span>
-                </div>
-                {f.annotation?.asn1?.description && (
-                  <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground/80">
-                    {f.annotation.asn1.description}
-                  </p>
-                )}
+              <li key={f.name} className="flex items-baseline justify-between gap-3">
+                <span className="truncate">
+                  {f.name}
+                  {f.optional && <span className="ml-1 text-xs text-muted-foreground">optional</span>}
+                </span>
+                <span className="truncate font-mono text-xs text-muted-foreground">{f.type}</span>
               </li>
             ))}
           </ul>
         )}
 
-        {asn1?.notes?.map((n, i) => (
-          <p key={i} className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground/70">
-            <span className="font-medium">Note:</span> {n}
-          </p>
-        ))}
+        {!hasBody && <p className="text-xs text-muted-foreground">No further structure.</p>}
       </div>
     </details>
   );

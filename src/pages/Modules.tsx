@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import * as hub from '@/services/hubClient';
 import type { Module } from '@/services/hubClient';
 import { useAsync } from '@/hooks/useAsync';
@@ -14,11 +15,13 @@ export function moduleName(m: Module): string {
 
 const SCOPES = ['all', 'public', 'private'] as const;
 type ScopeFilter = (typeof SCOPES)[number];
+type SortKey = 'name' | 'scope' | 'elements';
 
 export function Modules() {
   const modules = useAsync(hub.listModules);
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' }>({ key: 'name', dir: 'asc' });
 
   const scope = (params.get('scope') as ScopeFilter) ?? 'all';
   const q = params.get('q') ?? '';
@@ -32,15 +35,35 @@ export function Modules() {
       { replace: true }
     );
 
+  const toggleSort = (key: SortKey) =>
+    setSort((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' }));
+
   const list = modules.data ?? [];
-  const filtered = useMemo(() => {
+  const rows = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return list.filter((m) => {
+    const filtered = list.filter((m) => {
       if (scope !== 'all' && m.scope !== scope) return false;
       if (needle && !`${moduleName(m)} ${m.oid}`.toLowerCase().includes(needle)) return false;
       return true;
     });
-  }, [list, scope, q]);
+    const cmp = (a: Module, b: Module) => {
+      if (sort.key === 'elements') return (a.elementCount ?? 0) - (b.elementCount ?? 0);
+      if (sort.key === 'scope') return (a.scope ?? '').localeCompare(b.scope ?? '');
+      return moduleName(a).localeCompare(moduleName(b));
+    };
+    filtered.sort((a, b) => (sort.dir === 'asc' ? cmp(a, b) : -cmp(a, b)));
+    return filtered;
+  }, [list, scope, q, sort]);
+
+  const Th = ({ label, k, className }: { label: string; k: SortKey; className?: string }) => (
+    <th className={cn('px-4 py-2 font-medium', className)}>
+      <button onClick={() => toggleSort(k)} className="inline-flex items-center gap-1 hover:text-foreground">
+        {label}
+        {sort.key === k &&
+          (sort.dir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+      </button>
+    </th>
+  );
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-6">
@@ -82,13 +105,13 @@ export function Modules() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-card/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-4 py-2 font-medium">Name</th>
-                  <th className="px-4 py-2 font-medium">Scope</th>
-                  <th className="px-4 py-2 font-medium">Uploaded</th>
+                  <Th label="Name" k="name" />
+                  <Th label="Scope" k="scope" />
+                  <Th label="Elements" k="elements" className="text-right" />
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((m) => (
+                {rows.map((m) => (
                   <tr
                     key={m.oid}
                     onClick={() =>
@@ -102,10 +125,10 @@ export function Modules() {
                         {m.scope === 'private' ? 'Private' : 'Public'}
                       </Badge>
                     </td>
-                    <td className="px-4 py-2 text-muted-foreground">{(m.uploadedAt ?? '').slice(0, 10)}</td>
+                    <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">{m.elementCount ?? 0}</td>
                   </tr>
                 ))}
-                {filtered.length === 0 && (
+                {rows.length === 0 && (
                   <tr>
                     <td colSpan={3} className="px-4 py-6 text-center text-sm text-muted-foreground">
                       No modules match.
@@ -116,7 +139,7 @@ export function Modules() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            {filtered.length} of {list.length}
+            {rows.length} of {list.length}
           </p>
         </>
       )}
