@@ -99,6 +99,35 @@ export interface ModuleStructure {
   modules?: { name: string; elements: ModuleElement[] }[];
 }
 
+/** The public, mechanical ASN.1 annotation of an element or field. */
+export interface Asn1Annotation {
+  description?: string;
+  notes?: string[];
+  unit?: string;
+  category?: string;
+  revision?: string;
+  tags?: Record<string, string>;
+}
+
+/** A member of an indexed element (SEQUENCE component / CHOICE alternative). */
+export interface IndexField {
+  name: string;
+  type: string;
+  optional?: boolean;
+  default?: string;
+  annotation?: { asn1?: Asn1Annotation };
+}
+
+/** One element from the precomputed index (public projection — never asn1Source/enrichment). */
+export interface IndexElement {
+  elementName: string;
+  asn1Type: string;
+  values?: { value: string; name: string }[];
+  constraint?: { min?: string; max?: string };
+  fields?: IndexField[];
+  annotation?: { asn1?: Asn1Annotation };
+}
+
 /** GET /api/aliases — the user's aliases plus the public defaults. */
 export function listAliases(): Promise<Alias[]> {
   return getJson<Alias[]>('/api/aliases', 'Could not load aliases');
@@ -114,9 +143,10 @@ export function listModules(): Promise<Module[]> {
   return getJson<Module[]>('/api/modules', 'Could not load modules');
 }
 
-/** GET /api/modules/structure — the module's digested structure (types + members). No raw source. */
-export function getModuleStructure(oid: string): Promise<ModuleStructure> {
-  return getJson<ModuleStructure>('/api/modules/structure', 'Could not load module structure', {
-    'X-Module-Oid': oid,
-  });
+/** GET /api/index/elements — the module's elements from the precomputed index (fast; correct asn1Type + structured comments). */
+export function getModuleElements(moduleId: string): Promise<IndexElement[]> {
+  return getJson<IndexElement[]>(
+    `/api/index/elements?moduleId=${encodeURIComponent(moduleId)}`,
+    'Could not load module elements'
+  );
 }

@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Boxes } from 'lucide-react';
 import * as hub from '@/services/hubClient';
-import type { Module, ModuleElement } from '@/services/hubClient';
+import type { IndexElement, Module } from '@/services/hubClient';
 import { useAsync } from '@/hooks/useAsync';
 import { Badge } from '@/components/ui/badge';
 import { moduleName } from './Modules';
@@ -37,11 +36,8 @@ export function ModuleDetail() {
 }
 
 function ModuleBody({ module }: { module: Module }) {
-  const structure = useAsync(() => hub.getModuleStructure(module.oid), [module.oid]);
-  const elements = useMemo<ModuleElement[]>(
-    () => (structure.data?.modules ?? []).flatMap((m) => m.elements ?? []),
-    [structure.data]
-  );
+  const elements = useAsync(() => hub.getModuleElements(module.moduleId), [module.moduleId]);
+  const list = elements.data ?? [];
 
   return (
     <>
@@ -58,43 +54,70 @@ function ModuleBody({ module }: { module: Module }) {
       )}
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground">
-        Types {!structure.loading && !structure.error && `(${elements.length})`}
+        Elements {!elements.loading && !elements.error && `(${list.length})`}
       </h2>
-      {structure.loading && <p className="text-sm text-muted-foreground">Loading structure…</p>}
-      {structure.error && <p className="text-sm text-destructive">{structure.error}</p>}
+      {elements.loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {elements.error && <p className="text-sm text-destructive">{elements.error}</p>}
       <div className="flex flex-col gap-1.5">
-        {elements.map((el) => (
-          <ElementRow key={el.name} el={el} />
+        {list.map((el) => (
+          <ElementRow key={el.elementName} el={el} />
         ))}
       </div>
     </>
   );
 }
 
-/** One type: name + clean kind, expandable (native <details>) to its members with their types. */
-function ElementRow({ el }: { el: ModuleElement }) {
-  const members = el.fields ?? el.options ?? [];
-  const count = members.length || el.values?.length || 0;
+/** One element: name + asn1Type, expandable to its description, metadata, named values and fields. */
+function ElementRow({ el }: { el: IndexElement }) {
+  const asn1 = el.annotation?.asn1;
+  const fields = el.fields ?? [];
+  const count = fields.length || el.values?.length || 0;
+  const chips = [
+    asn1?.category,
+    asn1?.unit && `unit: ${asn1.unit}`,
+    el.constraint && `${el.constraint.min ?? '?'} … ${el.constraint.max ?? '?'}`,
+  ].filter(Boolean) as string[];
 
   return (
     <details className="rounded-md border border-border/60 open:bg-accent/20">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-sm">
-        <span className="font-medium">{el.name}</span>
+        <span className="font-medium">{el.elementName}</span>
         <Badge variant="outline" className="font-mono text-[10px]">
-          {el.kind}
+          {el.asn1Type}
         </Badge>
         {count > 0 && <span className="ml-auto text-xs text-muted-foreground">{count}</span>}
       </summary>
 
-      <div className="border-t border-border/60 px-3 py-2">
-        {el.comment && (
-          <p className="mb-2 whitespace-pre-line border-l-2 border-border pl-3 text-xs leading-relaxed text-muted-foreground">
-            {el.comment}
+      <div className="flex flex-col gap-3 border-t border-border/60 px-3 py-2.5">
+        {asn1?.description && (
+          <p className="whitespace-pre-line border-l-2 border-border pl-3 text-xs leading-relaxed text-muted-foreground">
+            {asn1.description}
           </p>
         )}
-        {members.length > 0 && (
+
+        {chips.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {chips.map((c) => (
+              <span key={c} className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-secondary-foreground">
+                {c}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {el.values && el.values.length > 0 && (
+          <ul className="flex flex-wrap gap-1.5 text-xs">
+            {el.values.map((v) => (
+              <li key={v.name} className="rounded bg-secondary px-1.5 py-0.5 font-mono text-secondary-foreground">
+                {v.name} <span className="text-muted-foreground">({v.value})</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {fields.length > 0 && (
           <ul className="flex flex-col gap-1.5 text-sm">
-            {members.map((f) => (
+            {fields.map((f) => (
               <li key={f.name} className="flex flex-col gap-0.5">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="truncate">
@@ -103,25 +126,21 @@ function ElementRow({ el }: { el: ModuleElement }) {
                   </span>
                   <span className="truncate font-mono text-xs text-muted-foreground">{f.type}</span>
                 </div>
-                {f.comment && (
+                {f.annotation?.asn1?.description && (
                   <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground/80">
-                    {f.comment}
+                    {f.annotation.asn1.description}
                   </p>
                 )}
               </li>
             ))}
           </ul>
         )}
-        {el.values && el.values.length > 0 && (
-          <ul className="flex flex-wrap gap-1.5 text-xs">
-            {el.values.map((v) => (
-              <li key={v} className="rounded bg-secondary px-1.5 py-0.5 font-mono text-secondary-foreground">
-                {v}
-              </li>
-            ))}
-          </ul>
-        )}
-        {count === 0 && !el.comment && <p className="text-xs text-muted-foreground">No members.</p>}
+
+        {asn1?.notes?.map((n, i) => (
+          <p key={i} className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground/70">
+            <span className="font-medium">Note:</span> {n}
+          </p>
+        ))}
       </div>
     </details>
   );
