@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Boxes } from 'lucide-react';
+import { ArrowLeft, Boxes, Pencil } from 'lucide-react';
+import { toast } from 'sonner';
 import * as hub from '@/services/hubClient';
 import type { IndexElement, Module } from '@/services/hubClient';
 import { useAsync } from '@/hooks/useAsync';
@@ -49,9 +51,7 @@ function ModuleBody({ module }: { module: Module }) {
         </Badge>
       </div>
       <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{module.oid}</p>
-      {module.note && (
-        <p className="mt-3 rounded-md border border-border bg-card p-3 text-sm">{module.note}</p>
-      )}
+      <ShortEditor module={module} />
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground">
         Elements {!elements.loading && !elements.error && `(${list.length})`}
@@ -64,6 +64,67 @@ function ModuleBody({ module }: { module: Module }) {
         ))}
       </div>
     </>
+  );
+}
+
+/** The module's public one-line summary — click to edit, saved via the hub. */
+function ShortEditor({ module }: { module: Module }) {
+  const [short, setShort] = useState(module.short ?? '');
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await hub.setModuleShort(module.moduleId, short.trim());
+      setEditing(false);
+      toast.success('Summary saved');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not save summary');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <div className="mt-3 flex gap-2">
+        <input
+          autoFocus
+          value={short}
+          onChange={(e) => setShort(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && save()}
+          placeholder="Short summary (shown in the Modules list)…"
+          className="h-8 flex-1 rounded-md border border-border bg-transparent px-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+        <button
+          onClick={save}
+          disabled={saving}
+          className="rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          Save
+        </button>
+        <button
+          onClick={() => {
+            setShort(module.short ?? '');
+            setEditing(false);
+          }}
+          className="rounded-md px-2 text-sm text-muted-foreground hover:text-foreground"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+    >
+      {short ? <span>{short}</span> : <span className="italic">Add a short summary…</span>}
+      <Pencil className="h-3 w-3" />
+    </button>
   );
 }
 

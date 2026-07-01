@@ -119,13 +119,18 @@ export function Modules() {
                     }
                     className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40"
                   >
-                    <td className="px-4 py-2 font-medium">{moduleName(m)}</td>
                     <td className="px-4 py-2">
+                      <div className="font-medium">{moduleName(m)}</div>
+                      {m.short && <div className="text-xs font-normal text-muted-foreground">{m.short}</div>}
+                    </td>
+                    <td className="px-4 py-2 align-top">
                       <Badge variant={m.scope === 'private' ? 'primary' : 'default'}>
                         {m.scope === 'private' ? 'Private' : 'Public'}
                       </Badge>
                     </td>
-                    <td className="px-4 py-2 text-right tabular-nums text-muted-foreground">{m.elementCount ?? 0}</td>
+                    <td className="px-4 py-2 text-right align-top tabular-nums text-muted-foreground">
+                      {m.elementCount ?? 0}
+                    </td>
                   </tr>
                 ))}
                 {rows.length === 0 && (

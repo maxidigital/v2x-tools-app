@@ -67,7 +67,8 @@ export interface SavedMessage {
 export interface Module {
   moduleId: string;
   oid: string;
-  note?: string;
+  /** Manual one-line summary shown in the Modules list (public; editable). */
+  short?: string;
   elementCount?: number;
   uploadedAt?: string;
   scope?: 'public' | 'private';
@@ -150,4 +151,14 @@ export function getModuleElements(moduleId: string): Promise<IndexElement[]> {
     `/api/index/elements?moduleId=${encodeURIComponent(moduleId)}`,
     'Could not load module elements'
   );
+}
+
+/** PATCH /api/modules/short — set a module's public one-line summary. */
+export async function setModuleShort(moduleId: string, short: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/modules/short?moduleId=${encodeURIComponent(moduleId)}`, {
+    method: 'PATCH',
+    headers: { ...authHeaders(), 'Content-Type': 'text/plain' },
+    body: short,
+  });
+  if (!res.ok) throw new HubError(await readError(res, 'Could not save summary'), res.status);
 }
