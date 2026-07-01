@@ -78,6 +78,8 @@ export interface ModuleField {
   type: string;
   optional?: boolean;
   default?: string;
+  /** The ASN.1 comment the parser captured for this field, if any. */
+  comment?: string;
 }
 
 /** A type the module defines (SEQUENCE/CHOICE/ENUMERATED/…), with its members. */
@@ -87,6 +89,8 @@ export interface ModuleElement {
   fields?: ModuleField[];
   options?: ModuleField[];
   values?: string[];
+  /** The ASN.1 comment the parser captured for this type, if any. */
+  comment?: string;
 }
 
 /** Digested structure of a module (NO raw ASN.1 source): the types it defines + their members. */

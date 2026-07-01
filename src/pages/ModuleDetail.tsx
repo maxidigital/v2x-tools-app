@@ -87,15 +87,27 @@ function ElementRow({ el }: { el: ModuleElement }) {
       </summary>
 
       <div className="border-t border-border/60 px-3 py-2">
+        {el.comment && (
+          <p className="mb-2 whitespace-pre-line border-l-2 border-border pl-3 text-xs leading-relaxed text-muted-foreground">
+            {el.comment}
+          </p>
+        )}
         {members.length > 0 && (
-          <ul className="flex flex-col gap-1 text-sm">
+          <ul className="flex flex-col gap-1.5 text-sm">
             {members.map((f) => (
-              <li key={f.name} className="flex items-baseline justify-between gap-3">
-                <span className="truncate">
-                  {f.name}
-                  {f.optional && <span className="ml-1 text-xs text-muted-foreground">optional</span>}
-                </span>
-                <span className="truncate font-mono text-xs text-muted-foreground">{f.type}</span>
+              <li key={f.name} className="flex flex-col gap-0.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="truncate">
+                    {f.name}
+                    {f.optional && <span className="ml-1 text-xs text-muted-foreground">optional</span>}
+                  </span>
+                  <span className="truncate font-mono text-xs text-muted-foreground">{f.type}</span>
+                </div>
+                {f.comment && (
+                  <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground/80">
+                    {f.comment}
+                  </p>
+                )}
               </li>
             ))}
           </ul>
@@ -109,7 +121,7 @@ function ElementRow({ el }: { el: ModuleElement }) {
             ))}
           </ul>
         )}
-        {count === 0 && <p className="text-xs text-muted-foreground">No members.</p>}
+        {count === 0 && !el.comment && <p className="text-xs text-muted-foreground">No members.</p>}
       </div>
     </details>
   );
