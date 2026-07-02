@@ -44,22 +44,22 @@ function ModuleBody({ module }: { module: Module }) {
 
   return (
     <>
-      <div className="flex items-center gap-2">
-        <Boxes className="h-5 w-5 text-muted-foreground" />
+      <div className="flex flex-wrap items-center gap-2">
+        <Boxes className="h-5 w-5 shrink-0 text-muted-foreground" />
         <h1 className="text-xl font-semibold tracking-tight">{moduleName(module)}</h1>
         <Badge variant={module.scope === 'private' ? 'primary' : 'default'}>
           {module.scope === 'private' ? 'Private' : 'Public'}
         </Badge>
-      </div>
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs">
         <span
-          className="rounded bg-secondary px-1.5 py-0.5 text-secondary-foreground"
+          className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-secondary-foreground"
           title="moduleId (system alias — use it as a ref)"
         >
           {module.moduleId}
         </span>
-        <span className="break-all text-muted-foreground">{module.oid}</span>
       </div>
+      <p className="mt-1.5 break-all font-mono text-xs text-muted-foreground">
+        {module.oid.slice(Math.max(0, module.oid.indexOf('{')))}
+      </p>
       <ShortEditor module={module} />
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground">
