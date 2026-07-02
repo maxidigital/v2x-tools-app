@@ -50,7 +50,15 @@ function ModuleBody({ module }: { module: Module }) {
           {module.scope === 'private' ? 'Private' : 'Public'}
         </Badge>
       </div>
-      <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{module.oid}</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs">
+        <span
+          className="rounded bg-secondary px-1.5 py-0.5 text-secondary-foreground"
+          title="moduleId (system alias — use it as a ref)"
+        >
+          {module.moduleId}
+        </span>
+        <span className="break-all text-muted-foreground">{module.oid}</span>
+      </div>
       <ShortEditor module={module} />
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground">
