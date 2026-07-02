@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import * as hub from '@/services/hubClient';
 import type { IndexElement, Module } from '@/services/hubClient';
 import { useAsync } from '@/hooks/useAsync';
+import { useAuth } from '@/stores/useAuthStore';
 import { Badge } from '@/components/ui/badge';
 import { moduleName } from './Modules';
 
@@ -80,6 +81,7 @@ function ShortEditor({ module }: { module: Module }) {
   const [short, setShort] = useState(module.short ?? '');
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const isAdmin = useAuth().user?.role === 'ADMIN';
 
   const save = async () => {
     setSaving(true);
@@ -93,6 +95,11 @@ function ShortEditor({ module }: { module: Module }) {
       setSaving(false);
     }
   };
+
+  // Non-admins can't edit: show the short read-only (or nothing if empty).
+  if (!isAdmin) {
+    return module.short ? <p className="mt-3 text-sm text-muted-foreground">{module.short}</p> : null;
+  }
 
   if (editing) {
     return (
