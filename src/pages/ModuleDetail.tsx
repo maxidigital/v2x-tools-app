@@ -82,6 +82,9 @@ function ShortEditor({ module }: { module: Module }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const isAdmin = useAuth().user?.role === 'ADMIN';
+  // Web editing is OFF for now — the short will be editable via the chat/MCP later. The edit UI below is kept
+  // (behind this flag) for when we re-enable it. Flip to true to bring it back.
+  const webEditEnabled: boolean = false;
 
   const save = async () => {
     setSaving(true);
@@ -96,8 +99,8 @@ function ShortEditor({ module }: { module: Module }) {
     }
   };
 
-  // Non-admins can't edit: show the short read-only (or nothing if empty).
-  if (!isAdmin) {
+  // Read-only for everyone while web editing is off (and for non-admins when it's on).
+  if (!webEditEnabled || !isAdmin) {
     return module.short ? <p className="mt-3 text-sm text-muted-foreground">{module.short}</p> : null;
   }
 
