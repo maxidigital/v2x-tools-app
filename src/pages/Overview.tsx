@@ -93,7 +93,7 @@ export function Overview() {
           rows={(messages.data ?? []).map((m) => ({
             key: m.name,
             primary: m.name,
-            secondary: [m.moduleAlias, m.rootType].filter(Boolean).join(' · '),
+            secondary: [m.moduleAlias, m.rootElement].filter(Boolean).join(' · '),
           }))}
         />
       </Section>

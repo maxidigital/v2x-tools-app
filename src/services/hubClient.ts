@@ -58,7 +58,7 @@ export interface Alias {
 export interface SavedMessage {
   name: string;
   moduleAlias: string;
-  rootType: string;
+  rootElement: string;
   description: string;
   fixups: unknown[];
 }
