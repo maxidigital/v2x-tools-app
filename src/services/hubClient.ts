@@ -54,13 +54,13 @@ export interface Alias {
   scope: 'default' | 'personal';
 }
 
-/** A saved message ref (named definition with optional generation fixups). */
+/** A saved message ref (named definition with an optional load-options bag, e.g. generation fixups). */
 export interface SavedMessage {
   name: string;
   moduleAlias: string;
   rootElement: string;
   description: string;
-  fixups: unknown[];
+  options: { fixups: unknown[] };
 }
 
 /** An ASN.1 module visible to the user. `scope` is `public` (user 0) or `private` (the user's own). */
