@@ -7,14 +7,14 @@ import type { AuthUser, UserPreferences } from '@/stores/useAuthStore';
  *  - **Data calls** (`me` / `redeem`) are **same-origin** (`BASE = ''`): the app's own Caddy proxies
  *    `/api/auth/*` to the users service over Railway private networking → no CORS.
  *  - **The OAuth/SSO dance** (login / sso / logout) is a **top-level redirect to the IdP host**
- *    (`IDP_BASE`, default `https://v2x.tools`). The HttpOnly IdP session cookie `sso` is seated on
- *    `v2x.tools` (`Path=/api/auth`), so the silent SSO check only carries the cookie when the browser
+ *    (`IDP_BASE`, default `https://tools.asn1click.com`). The HttpOnly IdP session cookie `sso` is seated on
+ *    `tools.asn1click.com` (`Path=/api/auth`, the OAuth callback host since 2026-11-25), so the silent SSO check only carries the cookie when the browser
  *    navigates to that host directly — a same-origin `/api/auth/sso` here would reach users without the
  *    cookie and always report `#nosession`. The IdP bounces back to this app via `?redirect=` (the
  *    users service allow-lists `app.asn1click.com` in `safeRedirect`).
  */
 const BASE = import.meta.env.VITE_API_BASE ?? '';
-const IDP_BASE = import.meta.env.VITE_IDP_BASE ?? 'https://v2x.tools';
+const IDP_BASE = import.meta.env.VITE_IDP_BASE ?? 'https://tools.asn1click.com';
 
 /** The URL to send the browser to in order to start the OAuth flow with a provider (on the IdP host). */
 export function loginUrl(provider: string, returnTo: string): string {

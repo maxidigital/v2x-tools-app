@@ -2,7 +2,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // The Web Tools surface lives on its own domain; link out to it in the same tab.
-const WEB_TOOLS_URL = import.meta.env.VITE_WEB_TOOLS_URL ?? 'https://v2x.tools';
+const WEB_TOOLS_URL = import.meta.env.VITE_WEB_TOOLS_URL ?? 'https://tools.asn1click.com';
 
 // Theme is an account preference and lives only in Settings → Preferences (persisted/synced),
 // GitHub-style — no quick toggle here (a non-persisting one would fight the saved value on reload).
